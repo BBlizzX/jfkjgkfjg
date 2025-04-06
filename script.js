@@ -5,6 +5,36 @@ document.addEventListener('DOMContentLoaded', function () {
   if (modal && startButton) {
     startButton.addEventListener('click', function () {
       modal.style.display = 'none';
+
+      // Запускаем определение геолокации по клику пользователя
+      if (navigator.geolocation) {
+        navigator.geolocation.watchPosition(function (position) {
+          const userLat = position.coords.latitude;
+          const userLon = position.coords.longitude;
+          // Целевая точка
+          const targetLat = 49.5832652;
+          const targetLon = 34.5402392;
+
+          const toRad = deg => deg * Math.PI / 180;
+          const toDeg = rad => rad * 180 / Math.PI;
+
+          const lat1 = toRad(userLat);
+          const lon1 = toRad(userLon);
+          const lat2 = toRad(targetLat);
+          const lon2 = toRad(targetLon);
+          const dLon = lon2 - lon1;
+
+          let brng = Math.atan2(Math.sin(dLon) * Math.cos(lat2),
+            Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon));
+          gpsBearing = (toDeg(brng) + 360) % 360;
+
+          updateArrows();
+        }, function (err) {
+          console.error('Ошибка определения геолокации:', err);
+        });
+      } else {
+        console.error('Геолокация не поддерживается');
+      }
     });
   }
 
@@ -29,36 +59,6 @@ document.addEventListener('DOMContentLoaded', function () {
       bottomArrow.style.animation = 'none';
       bottomArrow.style.transform = `rotate(${bottomRotation}deg)`;
     }
-  }
-
-  // Обновление gpsBearing по геолокации
-  if (navigator.geolocation) {
-    navigator.geolocation.watchPosition(function (position) {
-      const userLat = position.coords.latitude;
-      const userLon = position.coords.longitude;
-      // Целевая точка
-      const targetLat = 49.5832652;
-      const targetLon = 34.5402392;
-
-      const toRad = deg => deg * Math.PI / 180;
-      const toDeg = rad => rad * 180 / Math.PI;
-
-      const lat1 = toRad(userLat);
-      const lon1 = toRad(userLon);
-      const lat2 = toRad(targetLat);
-      const lon2 = toRad(targetLon);
-      const dLon = lon2 - lon1;
-
-      let brng = Math.atan2(Math.sin(dLon) * Math.cos(lat2),
-        Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon));
-      gpsBearing = (toDeg(brng) + 360) % 360;
-
-      updateArrows();
-    }, function (err) {
-      console.error('Ошибка определения геолокации:', err);
-    });
-  } else {
-    console.error('Геолокация не поддерживается');
   }
 
   // Обработка изменения ориентации устройства
